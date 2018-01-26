@@ -78,4 +78,29 @@ namespace DriveRemover {
             this.append(menu_item);
         }
     }
+
+    class HelpMenu : Gtk.Menu {
+        public HelpMenu() {
+            var quit_menu_item = new Gtk.ImageMenuItem.from_stock(Gtk.Stock.QUIT, null);
+            quit_menu_item.activate.connect(Gtk.main_quit);
+            this.append(quit_menu_item);
+
+            var about_menu_item = new Gtk.ImageMenuItem.from_stock(Gtk.Stock.ABOUT, null);
+            about_menu_item.activate.connect(this.show_about_dialog);
+            this.append(about_menu_item);
+        }
+
+        private void show_about_dialog() {
+            var dialog = new Gtk.AboutDialog();
+            dialog.set_logo_icon_name("drive-removable-media");
+            dialog.set_program_name("Drive Remover");
+            dialog.set_version("0.0.1");
+            dialog.set_copyright("Copyright © 2016-2018 Xianguang Zhou");
+            dialog.set_authors({"Xianguang Zhou <xianguang.zhou@outlook.com>"});
+            dialog.set_icon_name("drive-removable-media");
+            dialog.set_position(Gtk.WindowPosition.CENTER);
+            dialog.run();
+            dialog.destroy();
+        }
+    }
 }
