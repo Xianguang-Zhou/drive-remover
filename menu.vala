@@ -69,5 +69,13 @@ namespace DriveRemover {
                 }
             }
         }
-    }        
+    }
+
+    class EmptyMenu : Gtk.Menu {
+        public EmptyMenu() {
+            var menu_item = new Gtk.MenuItem.with_label("None Removable Drive");
+            menu_item.set_sensitive(false);
+            this.append(menu_item);
+        }
+    }
 }
