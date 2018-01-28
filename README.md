@@ -1,7 +1,5 @@
 ﻿# Drive Remover
 
-## Dependencies
+* Vala edition: https://github.com/Xianguang-Zhou/drive-remover/tree/master/vala
+* Python edition: https://github.com/Xianguang-Zhou/drive-remover/tree/master/python
 
-* python >= 2.7
-* python-gtk2 >= 2.24.0
-* python-notify >= 0.1.1
