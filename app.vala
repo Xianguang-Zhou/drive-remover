@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace DriveRemover { 
+namespace DriveRemover {
     class App : GLib.Object {
         private DriveMenu drive_menu;
         private HelpMenu help_menu;
@@ -34,10 +34,9 @@ namespace DriveRemover {
 
             this.volume_monitor = GLib.VolumeMonitor.get();
             this.volume_monitor.drive_connected.connect(this.on_drive_connected);
-            this.volume_monitor.drive_disconnected.connect(this.on_drive_disconnected);
 
             foreach (Drive drive in this.volume_monitor.get_connected_drives()) {
-                if (drive.can_stop()) {
+                if (drive.can_eject() && drive.has_volumes()) {
                     this.drive_menu.add_drive_item(drive);
                 }
             }
@@ -48,18 +47,14 @@ namespace DriveRemover {
         }
 
         private void on_drive_connected(GLib.Drive drive) {
-            if (drive.can_stop()) {
+            if (drive.can_eject() && drive.has_volumes()) {
                 this.drive_menu.add_drive_item(drive);
                 var notification = new Notify.Notification("drive added", drive.get_name(), "drive-removable-media");
-                notification.show();
-            }
-        }
-
-        private void on_drive_disconnected(GLib.Drive drive) {
-            if (drive.can_stop()) {
-                this.drive_menu.remove_drive_item(drive);
-                var notification = new Notify.Notification("drive removed", drive.get_name(), "drive-removable-media");
-                notification.show();
+                try {
+                    notification.show();
+                } catch (GLib.Error error) {
+                    stderr.printf("%s\n", error.message);
+                }
             }
         }
 

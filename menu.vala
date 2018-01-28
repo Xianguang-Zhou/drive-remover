@@ -22,17 +22,19 @@ namespace DriveRemover {
     
         public DriveMenuItem(GLib.Drive drive) {
             this.set_image(new Gtk.Image.from_stock(Gtk.Stock.REMOVE, Gtk.IconSize.MENU));
-            this.drive = drive;
             this.set_label("Remove \"%s\"".printf(drive.get_name()));
-            this.activate.connect(this.stop_drive);
+            
+            this.drive = drive;
             this.operation = new GLib.MountOperation();
+
+            this.activate.connect(this.on_activate);            
         }
-    
-        private async void stop_drive() {
+
+        private async void on_activate() {
             var flags = GLib.MountUnmountFlags.NONE;
             do {
                 try {
-                    yield this.drive.stop(flags, this.operation);
+                    yield this.drive.eject_with_operation(flags, this.operation);
                     break;
                 } catch (GLib.Error error) {
                     string message = "Removing drive \"%s\" failed, do you want to remove the drive by force?\nReason: %s".printf(this.drive.get_name(), error.message);
@@ -45,10 +47,20 @@ namespace DriveRemover {
                     if (response == Gtk.ResponseType.YES) {
                         flags = GLib.MountUnmountFlags.FORCE;
                     } else {
-                        break;
+                        return;
                     }
                 }
             } while (true);
+
+            this.get_parent().remove(this);
+            this.destroy();
+
+            var notification = new Notify.Notification("drive removed", drive.get_name(), "drive-removable-media");
+            try {
+                notification.show();
+            } catch (GLib.Error error) {
+                stderr.printf("%s\n", error.message);
+            }
         }
     }
 
@@ -57,17 +69,6 @@ namespace DriveRemover {
             var menu_item = new DriveMenuItem(drive);
             this.append(menu_item);
             menu_item.show_all();
-        }
-
-        public void remove_drive_item(GLib.Drive drive) {
-            foreach (var widget in this.get_children()) {
-                DriveMenuItem menu_item = (DriveMenuItem)widget;
-                if (menu_item.drive == drive) {
-                    this.remove(widget);
-                    widget.destroy();
-                    break;
-                }
-            }
         }
     }
 
