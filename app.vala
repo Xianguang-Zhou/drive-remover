@@ -33,12 +33,11 @@ namespace DriveRemover {
             this.empty_menu = new EmptyMenu();
 
             this.volume_monitor = GLib.VolumeMonitor.get();
-            this.volume_monitor.drive_connected.connect(this.on_drive_connected);
+            this.volume_monitor.drive_connected.connect(this.drive_menu.add_drive_item);
+            this.volume_monitor.drive_disconnected.connect(this.drive_menu.remove_drive_item);
 
             foreach (Drive drive in this.volume_monitor.get_connected_drives()) {
-                if (drive.can_eject() && drive.has_volumes()) {
-                    this.drive_menu.add_drive_item(drive);
-                }
+                this.drive_menu.add_drive_item_without_notify(drive);
             }
 
             this.status_icon = new Gtk.StatusIcon.from_icon_name("drive-removable-media");
@@ -46,33 +45,21 @@ namespace DriveRemover {
             this.status_icon.button_press_event.connect(this.on_status_icon_button_press);
         }
 
-        private void on_drive_connected(GLib.Drive drive) {
-            if (drive.can_eject() && drive.has_volumes()) {
-                this.drive_menu.add_drive_item(drive);
-                var notification = new Notify.Notification("drive added", drive.get_name(), "drive-removable-media");
-                try {
-                    notification.show();
-                } catch (GLib.Error error) {
-                    stderr.printf("%s\n", error.message);
-                }
-            }
-        }
-
         private bool on_status_icon_button_press(Gdk.EventButton event) {
+            Gtk.Menu menu;
             if (event.button == 1) {
                 if (this.drive_menu.get_children().length() > 0) {
-                    this.drive_menu.show_all();
-                    this.drive_menu.popup(null, null, this.status_icon.position_menu, event.button, event.time);
+                    menu = this.drive_menu;
                 } else {
-                    this.empty_menu.show_all();
-                    this.empty_menu.popup(null, null, this.status_icon.position_menu, event.button, event.time);
+                    menu = this.empty_menu;
                 }
             } else if (event.button == 3) {
-                this.help_menu.show_all();
-                this.help_menu.popup(null, null, this.status_icon.position_menu, event.button, event.time);
+                menu = this.help_menu;
             } else {
                 return false;
             }
+            menu.show_all();
+            menu.popup(null, null, this.status_icon.position_menu, event.button, event.time);
             return true;
         }
 

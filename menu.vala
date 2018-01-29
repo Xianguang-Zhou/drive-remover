@@ -52,6 +52,10 @@ namespace DriveRemover {
                 }
             } while (true);
 
+            on_remove();
+        }
+
+        public void on_remove() {
             this.get_parent().remove(this);
             this.destroy();
 
@@ -65,10 +69,37 @@ namespace DriveRemover {
     }
 
     class DriveMenu : Gtk.Menu {
+        public bool add_drive_item_without_notify(GLib.Drive drive) {
+            if (drive.can_eject() && drive.has_media()) {
+                var menu_item = new DriveMenuItem(drive);
+                this.append(menu_item);
+                menu_item.show_all();
+                return true;
+            }
+            return false;
+        }
+
         public void add_drive_item(GLib.Drive drive) {
-            var menu_item = new DriveMenuItem(drive);
-            this.append(menu_item);
-            menu_item.show_all();
+            if (add_drive_item_without_notify(drive)) {
+                var notification = new Notify.Notification("drive added", drive.get_name(), "drive-removable-media");
+                try {
+                    notification.show();
+                } catch (GLib.Error error) {
+                    stderr.printf("%s\n", error.message);
+                }
+            }
+        }
+
+        public void remove_drive_item(GLib.Drive drive) {
+            if (drive.can_eject() && drive.has_media()) {
+                foreach (var widget in this.get_children()) {
+                    DriveMenuItem menu_item = (DriveMenuItem)widget;
+                    if (menu_item.drive == drive) {
+                        menu_item.on_remove();
+                        break;
+                    }
+                }
+            }
         }
     }
 
